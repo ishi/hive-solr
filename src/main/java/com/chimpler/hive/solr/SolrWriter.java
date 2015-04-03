@@ -1,29 +1,23 @@
 package com.chimpler.hive.solr;
 
-import java.io.IOException;
-import java.util.Map;
-
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter;
 import org.apache.hadoop.hive.serde2.io.ByteWritable;
 import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.serde2.io.ShortWritable;
-import org.apache.hadoop.io.BooleanWritable;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.MapWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.*;
 import org.apache.solr.common.SolrInputDocument;
+
+import java.io.IOException;
+import java.util.Map;
 
 public class SolrWriter implements RecordWriter {
 	private SolrTable table;
-	
-	public SolrWriter(String url, int numOutputBufferRows) {
-		this.table = new SolrTable(url);
-        if (numOutputBufferRows > 0) {
-        	table.setNumInputBufferRows(numOutputBufferRows);
-        }
+
+	public SolrWriter(SolrTable table, int numOutputBufferRows) {
+		this.table = table;
+		if (numOutputBufferRows > 0) {
+			table.setNumInputBufferRows(numOutputBufferRows);
+		}
 
 	}
 
@@ -69,7 +63,7 @@ public class SolrWriter implements RecordWriter {
 		} else if (w instanceof DoubleWritable) {
 			// double
 			return ((DoubleWritable) w).get();
-		}else if (w instanceof NullWritable) {
+		} else if (w instanceof NullWritable) {
 			//null
 			return null;
 		} else {

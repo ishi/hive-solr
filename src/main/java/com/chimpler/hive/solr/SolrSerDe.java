@@ -1,10 +1,5 @@
 package com.chimpler.hive.solr;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.Constants;
@@ -13,17 +8,18 @@ import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.AbstractPrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.MapWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.*;
 import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
 
 public class SolrSerDe implements SerDe {
 	static final String HIVE_TYPE_DOUBLE = "double";
@@ -41,7 +37,7 @@ public class SolrSerDe implements SerDe {
 	private List<String> columnNames;
 	String[] columnTypesArray;
 	private List<Object> row;
-	
+
 	Logger log = Logger.getLogger(SolrSerDe.class);
 
 	@Override
@@ -58,17 +54,17 @@ public class SolrSerDe implements SerDe {
 		fieldCount = columnNamesArray.length;
 		columnNames = new ArrayList<String>(columnNamesArray.length);
 		columnNames.addAll(Arrays.asList(columnNamesArray));
-		
+
 		log.debug("column names in mongo collection: " + columnNames);
-		
+
 		String hiveColumnNameProperty = tbl.getProperty(Constants.LIST_COLUMNS);
 		List<String> hiveColumnNameArray = new ArrayList<String>();
-		
+
 		if (hiveColumnNameProperty != null && hiveColumnNameProperty.length() > 0) {
 			hiveColumnNameArray = Arrays.asList(hiveColumnNameProperty.split(","));
 		}
 		log.debug("column names in hive table: " + hiveColumnNameArray);
-		
+
 		String columnTypeProperty = tbl
 				.getProperty(Constants.LIST_COLUMN_TYPES);
 		// System.err.println("column types:" + columnTypeProperty);
@@ -166,32 +162,31 @@ public class SolrSerDe implements SerDe {
 	public Writable serialize(final Object obj, final ObjectInspector inspector)
 			throws SerDeException {
 		final StructObjectInspector structInspector = (StructObjectInspector) inspector;
-		final List<? extends StructField> fields = structInspector
-				.getAllStructFieldRefs();
+		final List<? extends StructField> fields = structInspector.getAllStructFieldRefs();
 		if (fields.size() != columnNames.size()) {
 			throw new SerDeException(String.format(
 					"Required %d columns, received %d.", columnNames.size(),
 					fields.size()));
 		}
-		
+
 		cachedWritable.clear();
 		for (int c = 0; c < fieldCount; c++) {
 			StructField structField = fields.get(c);
 			if (structField != null) {
 				final Object field = structInspector.getStructFieldData(obj,
 						fields.get(c));
-				
+
 				//TODO:currently only support hive primitive type
-				final AbstractPrimitiveObjectInspector fieldOI = (AbstractPrimitiveObjectInspector)fields.get(c)
+				final AbstractPrimitiveObjectInspector fieldOI = (AbstractPrimitiveObjectInspector) fields.get(c)
 						.getFieldObjectInspector();
 
-				Writable value = (Writable)fieldOI.getPrimitiveWritableObject(field);
-				
+				Writable value = (Writable) fieldOI.getPrimitiveWritableObject(field);
+
 				if (value == null) {
-					if(PrimitiveCategory.STRING.equals(fieldOI.getPrimitiveCategory())){
-						value = NullWritable.get();	
+					if (PrimitiveCategory.STRING.equals(fieldOI.getPrimitiveCategory())) {
+						value = NullWritable.get();
 						//value = new Text("");
-					}else{
+					} else {
 						//TODO: now all treat as number
 						value = new IntWritable(0);
 					}

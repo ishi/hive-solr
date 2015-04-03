@@ -1,26 +1,24 @@
 package com.chimpler.hive.solr;
 
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.common.SolrInputDocument;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.common.SolrInputDocument;
-
 public class SolrTable {
 	private static final int MAX_INPUT_BUFFER_ROWS = 100000;
 	private static final int MAX_OUTPUT_BUFFER_ROWS = 100000;
-	private HttpSolrServer server;
-	private String url;
+	private SolrServer server;
 	private Collection<SolrInputDocument> outputBuffer;
 	private int numInputBufferRows = MAX_INPUT_BUFFER_ROWS;
-	private int numOutputBufferRows = MAX_OUTPUT_BUFFER_ROWS;	
+	private int numOutputBufferRows = MAX_OUTPUT_BUFFER_ROWS;
 
-	public SolrTable(String url) {
-        this.server = new HttpSolrServer(url);
-        this.url = url;
-        this.outputBuffer = new ArrayList<SolrInputDocument>(numOutputBufferRows);
+	public SolrTable(SolrServer solrServer) {
+		this.server = solrServer;
+		this.outputBuffer = new ArrayList<SolrInputDocument>(numOutputBufferRows);
 	}
 
 	public void save(SolrInputDocument doc) throws IOException {
@@ -30,7 +28,7 @@ public class SolrTable {
 			flush();
 		}
 	}
-	
+
 	public void flush() throws IOException {
 		try {
 			if (!outputBuffer.isEmpty()) {
@@ -47,10 +45,10 @@ public class SolrTable {
 	}
 
 	public SolrTableCursor findAll(String[] fields, int start, int count) throws IOException {
-		return new SolrTableCursor(url, fields, start, count, numInputBufferRows);
+		return new SolrTableCursor(server, fields, start, count, numInputBufferRows);
 	}
-	
-	public void drop() throws IOException{
+
+	public void drop() throws IOException {
 		try {
 			server.deleteByQuery("*:*");
 			server.commit();
@@ -92,5 +90,5 @@ public class SolrTable {
 	public void setNumInputBufferRows(int numInputBufferRows) {
 		this.numOutputBufferRows = numInputBufferRows;
 	}
-	
+
 }

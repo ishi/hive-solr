@@ -1,11 +1,5 @@
 package com.chimpler.hive.solr;
 
-import com.chimpler.hive.solr.ConfigurationUtil;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
@@ -23,9 +17,13 @@ import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+
 public class SolrStorageHandler implements HiveStorageHandler {
 	private Configuration mConf = null;
-	
+
 	public SolrStorageHandler() {
 	}
 
@@ -78,10 +76,10 @@ public class SolrStorageHandler implements HiveStorageHandler {
 			boolean isExternal = MetaStoreUtils.isExternalTable(tbl);
 			if (deleteData && isExternal) {
 				// nothing to do...
-			} else if(deleteData && !isExternal) {
+			} else if (deleteData && !isExternal) {
 				String url = tbl.getParameters().get(ConfigurationUtil.URL);
-	            HttpSolrServer server = new HttpSolrServer(url);
-	            try {
+				HttpSolrServer server = new HttpSolrServer(url);
+				try {
 					server.deleteByQuery("*:*");
 					server.commit();
 				} catch (SolrServerException e) {
