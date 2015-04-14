@@ -11,7 +11,11 @@ import java.net.MalformedURLException;
  * Created by Radoslaw_Zielinski on 4/3/2015.
  */
 public class SolrServerFactory {
-	public static SolrServer getInstance(JobConf conf) throws MalformedURLException {
+	public SolrServerFactory() {
+
+	}
+
+	public SolrServer getInstance(JobConf conf) throws MalformedURLException {
 		if (ConfigurationUtil.isZkUrlProvided(conf)) {
 			CloudSolrServer solrServer = new CloudSolrServer(ConfigurationUtil.getZkUrl(conf));
 			solrServer.setDefaultCollection(ConfigurationUtil.getZkCollection(conf));

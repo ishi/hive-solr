@@ -17,6 +17,8 @@ import java.util.Properties;
 public class SolrOutputFormat implements OutputFormat<NullWritable, Row>,
 		HiveOutputFormat<NullWritable, Row> {
 
+	private SolrServerFactory serverFactory = new SolrServerFactory();
+
 	@Override
 	public RecordWriter getHiveRecordWriter(JobConf conf,
 			Path finalOutPath,
@@ -25,8 +27,12 @@ public class SolrOutputFormat implements OutputFormat<NullWritable, Row>,
 			Properties tableProperties,
 			Progressable progress) throws IOException {
 		return new SolrWriter(
-				new SolrTable(SolrServerFactory.getInstance(conf)),
-				ConfigurationUtil.getNumOutputBufferRows(conf));
+				new SolrTable(serverFactory.getInstance(conf)),
+				ConfigurationUtil.getNumOutputBufferRows(conf),
+				new SolrDocumentFactory(
+						ConfigurationUtil.shouldOmitEmpty(conf),
+						ConfigurationUtil.getOmitEmptyColumns(conf))
+		);
 
 	}
 

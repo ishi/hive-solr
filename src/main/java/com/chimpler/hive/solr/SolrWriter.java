@@ -5,16 +5,16 @@ import org.apache.hadoop.hive.serde2.io.ByteWritable;
 import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.serde2.io.ShortWritable;
 import org.apache.hadoop.io.*;
-import org.apache.solr.common.SolrInputDocument;
 
 import java.io.IOException;
-import java.util.Map;
 
 public class SolrWriter implements RecordWriter {
 	private SolrTable table;
+	private final SolrDocumentFactory documentFactory;
 
-	public SolrWriter(SolrTable table, int numOutputBufferRows) {
+	public SolrWriter(SolrTable table, int numOutputBufferRows, SolrDocumentFactory documentFactory) {
 		this.table = table;
+		this.documentFactory = documentFactory;
 		if (numOutputBufferRows > 0) {
 			table.setNumInputBufferRows(numOutputBufferRows);
 		}
@@ -33,12 +33,7 @@ public class SolrWriter implements RecordWriter {
 	@Override
 	public void write(Writable w) throws IOException {
 		MapWritable map = (MapWritable) w;
-		SolrInputDocument doc = new SolrInputDocument();
-		for (final Map.Entry<Writable, Writable> entry : map.entrySet()) {
-			String key = entry.getKey().toString();
-			doc.setField(key, entry.getValue().toString());
-		}
-		table.save(doc);
+		table.save( documentFactory.create(map));
 	}
 
 	private Object getObjectFromWritable(Writable w) {

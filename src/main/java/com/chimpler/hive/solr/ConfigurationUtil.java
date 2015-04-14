@@ -15,9 +15,13 @@ public class ConfigurationUtil {
 	public static final String COLUMN_MAPPING = "solr.column.mapping";
 	public static final String BUFFER_IN_ROWS = "solr.buffer.input.rows";
 	public static final String BUFFER_OUT_ROWS = "solr.buffer.output.rows";
+	public static final String OMIT_EMPTY = "solr.omit-empty";
+	public static final String OMIT_EMPTY_COLUMNS = "solr.omit-empty.columns";
 
 	public static final Set<String> ALL_PROPERTIES = ImmutableSet.of(URL, ZK_URL, ZK_COLLECTION, COLUMN_MAPPING,
-			BUFFER_IN_ROWS, BUFFER_OUT_ROWS);
+			BUFFER_IN_ROWS, BUFFER_OUT_ROWS, OMIT_EMPTY, OMIT_EMPTY_COLUMNS);
+
+	public static final String[] NO_COLUMNS = new String[0];
 
 	public final static String getColumnMapping(Configuration conf) {
 		return conf.get(COLUMN_MAPPING);
@@ -39,6 +43,14 @@ public class ConfigurationUtil {
 		return conf.get(ZK_COLLECTION);
 	}
 
+	public static boolean shouldOmitEmpty(Configuration conf) {
+		return conf.getBoolean(OMIT_EMPTY, false) || conf.get(OMIT_EMPTY_COLUMNS) != null;
+	}
+
+	public static String[] getOmitEmptyColumns(Configuration conf) {
+		return getAllColumns(conf.get(OMIT_EMPTY_COLUMNS));
+	}
+
 	public final static int getNumInputBufferRows(Configuration conf) {
 		String value = conf.get(BUFFER_IN_ROWS, "-1");
 		return Integer.parseInt(value);
@@ -58,8 +70,7 @@ public class ConfigurationUtil {
 		}
 	}
 
-	public static void copySolrProperties(Properties from,
-			Map<String, String> to) {
+	public static void copySolrProperties(Properties from, Map<String, String> to) {
 		for (String key : ALL_PROPERTIES) {
 			String value = from.getProperty(key);
 			if (value != null) {
@@ -68,8 +79,11 @@ public class ConfigurationUtil {
 		}
 	}
 
-	public static String[] getAllColumns(String columnMappingString) {
-		String[] columns = columnMappingString.split(",");
+	public static String[] getAllColumns(String columnsString) {
+		if(null == columnsString || "".equals(columnsString)) {
+			return NO_COLUMNS;
+		}
+		String[] columns = columnsString.split(",");
 
 		String[] trimmedColumns = new String[columns.length];
 		for (int i = 0; i < columns.length; i++) {

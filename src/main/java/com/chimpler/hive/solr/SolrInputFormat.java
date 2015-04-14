@@ -25,6 +25,8 @@ public class SolrInputFormat extends
 	private static final String READ_ALL_COLUMNS = "hive.io.file.read.all.columns";
 	private static final boolean READ_ALL_COLUMNS_DEFAULT = true;
 
+	private SolrServerFactory serverFactory = new SolrServerFactory();
+
 	/**
 	 * Returns an array of column ids(start from zero) which is set in the given
 	 * parameter <tt>conf</tt>.
@@ -85,13 +87,13 @@ public class SolrInputFormat extends
 		}
 
 		return new SolrReader(
-				new SolrTable(SolrServerFactory.getInstance(conf)),
+				new SolrTable(serverFactory.getInstance(conf)),
 				(SolrSplit) split, cols, ConfigurationUtil.getNumInputBufferRows(conf));
 	}
 
 	@Override
 	public SolrSplit[] getSplits(JobConf conf, int numSplits) throws IOException {
-		return SolrSplit.getSplits(conf, new SolrTable(SolrServerFactory.getInstance(conf)), numSplits);
+		return SolrSplit.getSplits(conf, new SolrTable(serverFactory.getInstance(conf)), numSplits);
 	}
 
 	void dumpFilterExpr(ExprNodeDesc expr) {
